@@ -420,14 +420,27 @@
         // Function to show an error message
         function showError(inputElement, messageElement, message) {
             // Add error class to the parent input-group for border styling
-            inputElement.closest('.input-group').classList.add('error');
+            const parentInputGroup = inputElement.closest('.input-group');
+            if (parentInputGroup) {
+                parentInputGroup.classList.add('error');
+            } else {
+                // For OTP fields, add error class directly to the input
+                inputElement.classList.add('error');
+            }
             messageElement.textContent = message;
             messageElement.classList.remove('hidden');
         }
 
         // Function to hide an error message
         function hideError(inputElement, messageElement) {
-            inputElement.closest('.input-group').classList.remove('error');
+            // Check if the parent input-group exists before trying to access it
+            const parentInputGroup = inputElement.closest('.input-group');
+            if (parentInputGroup) {
+                parentInputGroup.classList.remove('error');
+            } else {
+                // If input-group is not the parent, it's likely the otp-input itself
+                inputElement.classList.remove('error');
+            }
             messageElement.classList.add('hidden');
             messageElement.textContent = '';
         }
