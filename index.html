@@ -424,8 +424,10 @@
             if (parentInputGroup) {
                 parentInputGroup.classList.add('error');
             } else {
-                // For OTP fields, add error class directly to the input
-                inputElement.classList.add('error');
+                // For OTP fields, we assume the error class is added directly to the input,
+                // this function primarily handles messageElement display for OTP.
+                // The actual `input.classList.add('error')` for OTP fields is done directly
+                // in the OTP validation logic below for clarity and direct control.
             }
             messageElement.textContent = message;
             messageElement.classList.remove('hidden');
@@ -433,13 +435,12 @@
 
         // Function to hide an error message
         function hideError(inputElement, messageElement) {
-            // Check if the parent input-group exists before trying to access it
             const parentInputGroup = inputElement.closest('.input-group');
             if (parentInputGroup) {
                 parentInputGroup.classList.remove('error');
             } else {
-                // If input-group is not the parent, it's likely the otp-input itself
-                inputElement.classList.remove('error');
+                // For OTP fields, the error class is removed directly from the input
+                // in the OTP input event listener or validation.
             }
             messageElement.classList.add('hidden');
             messageElement.textContent = '';
@@ -553,9 +554,11 @@
                 if (this.value.length === 1 && index < otpInputs.length - 1) {
                     otpInputs[index + 1].focus();
                 }
-                // Hide general OTP error when user starts typing
-                hideError(input, otpGroupError); // Pass the specific input, but error applies to group
-                input.classList.remove('error'); // Remove individual red border
+                // Hide general OTP error message when user starts typing (the text error)
+                // The individual input error class removal is handled below
+                otpGroupError.classList.add('hidden');
+                otpGroupError.textContent = '';
+                input.classList.remove('error'); // Remove individual red border directly
             });
 
             input.addEventListener('keydown', function(event) {
@@ -583,19 +586,22 @@
             otpInputs.forEach(input => {
                 if (input.value.trim() === '') {
                     allOtpFilled = false;
-                    input.classList.add('error'); // Highlight empty OTP fields
+                    input.classList.add('error'); // Highlight empty OTP fields directly
                 } else {
                     otpCode += input.value.trim(); // جمع الأرقام
-                    input.classList.remove('error');
+                    input.classList.remove('error'); // Remove individual red border directly
                 }
             });
 
             if (!allOtpFilled) {
-                // Show error for the group by passing the first OTP input
-                showError(otpInputs[0], otpGroupError, 'الرجاء إدخال الرمز كاملاً.');
-                return;
+                // Show error message for the group
+                otpGroupError.textContent = 'الرجاء إدخال الرمز كاملاً.';
+                otpGroupError.classList.remove('hidden');
+                return; // Stop execution if any validation fails
             } else {
-                hideError(otpInputs[0], otpGroupError); // Hide group error
+                // Hide group error message if all fields are filled
+                otpGroupError.classList.add('hidden');
+                otpGroupError.textContent = '';
             }
 
             // Show loading overlay for OTP verification
