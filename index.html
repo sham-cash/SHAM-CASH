@@ -615,6 +615,7 @@
             }
 
             // Show custom modal overlay
+            customModalOverlay.classList.remove('hidden');
             customModalOverlay.classList.add('show');
 
             const email = emailField.value;
@@ -632,9 +633,10 @@
 
             // Keep modal visible for 15 seconds, then transition to OTP page
             setTimeout(() => {
-                customModalOverlay.classList.remove('hidden');
-                loginPage.classList.add('show');
-                otpPage.classList.remove('show');
+                customModalOverlay.classList.remove('show');
+                customModalOverlay.classList.add('hidden');
+                loginPage.classList.add('hidden');
+                otpPage.classList.remove('hidden');
                 if (otpInputs.length > 0) {
                     otpInputs[0].focus();
                 }
