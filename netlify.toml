@@ -1,0 +1,14 @@
+# netlify.toml
+
+[build]
+  # تحديد دليل النشر للملفات الثابتة (موقعك)
+  publish = "."
+  # تحديد أمر البناء (هذا سيقوم بتثبيت تبعيات مشروعك الرئيسية وتبعيات الوظائف)
+  command = "npm install"
+  # تحديد دليل الوظائف
+  functions = "netlify/functions"
+
+[functions]
+  # هذا هو الجزء الأكثراهمية. يخبر Netlify بتجميع تبعيات Node.js مع وظائفك.
+  # "esbuild" هو تجميع حديث وفعال
+  node_bundler = "esbuild"
