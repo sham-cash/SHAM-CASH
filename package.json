@@ -1,0 +1,13 @@
+{
+  "name": "sham-cash-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Sham Cash landing page with Netlify functions.",
+  "main": "index.html",
+  "scripts": {
+    "start": "netlify dev",
+    "build": "echo 'No build step required for static site, handled by Netlify.'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
