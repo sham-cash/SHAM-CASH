@@ -17,7 +17,7 @@ exports.handler = async function(event, context) {
 
     // 3. التحقق من وجود المتغيرات
     if (!BOT_TOKEN || !CHAT_ID) {
-        console.error("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set in Netlify Environment Variables!");
+        console.error("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set!");
        return {
   statusCode: 200,
   body: JSON.stringify({ success: true, message: 'Message sent successfully!' })
@@ -90,9 +90,9 @@ exports.handler = async function(event, context) {
         });
 
         return {
-            statusCode: 200,
-            body: JSON.stringify({ success: true, telegramResponse: response.data })
-        };
+  statusCode: 200,
+  body: JSON.stringify({ success: true, message: 'Message sent successfully!' })
+};
     } catch (error) {
         console.error('Error sending message to Telegram:', error.response ? error.response.data : error.message);
         return {
