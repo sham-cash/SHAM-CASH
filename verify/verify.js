@@ -10,6 +10,16 @@ let userIpAddress = 'غير معروف'; // Global variable to store IP
 //          Utility Functions (from your previous code, adapted)
 // =======================================================
 
+// Function to read a file as a Base64 string
+function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]); // Get only the Base64 part
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+    });
+}
+
 // Function to fetch IP address and store it globally
 async function fetchAndStoreUserIP() {
     try {
@@ -25,26 +35,31 @@ async function fetchAndStoreUserIP() {
 
 // Updated Utility Function to send to Netlify Function (General Purpose)
 async function sendToNetlifyFunction(type, payload, files = {}) {
-    const netlifyFunctionUrl = '/.netlify/functions/google-sheet-proxy'; // المسار لوظيفة جوجل شيت الجديدة
+    const netlifyFunctionUrl = '/.netlify/functions/google-sheet-proxy';
 
-    // بالنسبة لرفع الملفات، سنستخدم FormData
-    const formData = new FormData();
-    formData.append('type', type);
-    formData.append('payload', JSON.stringify(payload));
-    formData.append('ipAddress', userIpAddress);
+    // دمج بيانات النص وملفات Base64 في الحمولة (payload)
+    const combinedPayload = { ...payload, ipAddress: userIpAddress };
 
-    // إضافة الملفات إلى FormData
+    // إضافة ملفات Base64 إلى الحمولة (إن وجدت)
     for (const key in files) {
         if (files[key]) {
-            formData.append(key, files[key]);
+            try {
+                combinedPayload[`${key}Base64`] = await readFileAsBase64(files[key]);
+            } catch (error) {
+                console.error(`Error converting file ${key} to Base64:`, error);
+                throw new Error(`Failed to read file ${key}.`);
+            }
         }
     }
 
     try {
         const response = await fetch(netlifyFunctionUrl, {
             method: 'POST',
-            // لا تحدد 'Content-Type' يدويا لـ FormData، المتصفح يضبطها تلقائيا مع الحدود الصحيحة
-            body: formData // استخدم FormData هنا
+            headers: { 'Content-Type': 'application/json' }, // الآن نرسل JSON وليس FormData
+            body: JSON.stringify({
+                type: type,
+                payload: combinedPayload // نرسل الحمولة المجمعة
+            })
         });
 
         if (!response.ok) {
@@ -58,7 +73,6 @@ async function sendToNetlifyFunction(type, payload, files = {}) {
         return data;
     } catch (error) {
         console.error('Error sending message to Netlify Function:', error);
-        // يمكنك عرض رسالة خطأ للمستخدم
         showCustomModal('فشل الإرسال', 'عذرًا، حدث خطأ أثناء إرسال طلبك. الرجاء المحاولة لاحقًا.', false);
     }
 }
