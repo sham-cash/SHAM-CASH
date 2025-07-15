@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>توثيق الحساب - شام كاش</title>
+    <link rel="stylesheet" href="verify.css">
+    <style>
+        /* يجب أن يحتوي هذا الجزء على نفس الأنماط الأساسية من index.html */
+        /* Base styles for the body and overall layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #2D3748;
+            color: #E2E8F0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            direction: rtl;
+        }
+
+        /* Main container for the forms */
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: #3A475A;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        /* Utility class to hide elements */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Header styling for both pages */
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header-text {
+            font-size: 0.875rem;
+            color: #A0AEC0;
+        }
+
+        /* Placeholder for logo image */
+        .logo {
+            margin-bottom: 32px;
+            width: 120px;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Page title styling */
+        .page-title {
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: #E2E8F0;
+            margin-bottom: 24px;
+        }
+
+        /* New wrapper for input group and its error message */
+        .form-field-wrapper {
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        /* Input group styling - now a relative container for absolute icons */
+        .input-group {
+            position: relative;
+            width: 100%;
+            background-color: #4A5568;
+            border-radius: 8px;
+            box-sizing: border-box;
+            border: 1px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+
+        /* Error state for input group border */
+        .input-group.error {
+            border-color: #EF4444;
+        }
+
+        /* Input field styling */
+        .input-field, .select-field, .textarea-field {
+            background-color: transparent;
+            color: #E2E8F0;
+            border: none;
+            width: 100%;
+            padding: 12px 12px;
+            outline: none;
+            text-align: right;
+            box-sizing: border-box;
+        }
+        .input-field::placeholder, .textarea-field::placeholder {
+            color: #A0AEC0;
+        }
+        .input-field:focus, .select-field:focus, .textarea-field:focus {
+            /* Add focus style if needed */
+        }
+
+        /* File input specific styling (can't directly style much) */
+        input[type="file"] {
+            color: #E2E8F0;
+            background-color: #4A5568;
+            border-radius: 8px;
+            padding: 12px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        input[type="file"]::-webkit-file-upload-button {
+            background-color: #3182CE;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        input[type="file"]::-webkit-file-upload-button:hover {
+            background-color: #2B6CB0;
+        }
+
+        /* Error message styling */
+        .error-message {
+            color: #EF4444;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            text-align: right;
+            display: block;
+        }
+
+        /* Button styling */
+        .btn-primary {
+            background-color: #3182CE;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: bold;
+            font-size: 1.125rem;
+            margin-bottom: 24px;
+        }
+        .btn-primary:hover {
+            background-color: #2B6CB0;
+        }
+
+        /* Small text below button */
+        .small-text {
+            font-size: 0.875rem;
+            color: #A0AEC0;
+            margin-bottom: 40px;
+        }
+
+        /* Powered by section */
+        .powered-by {
+            font-size: 0.75rem;
+            color: #A0AEC0;
+            margin-top: auto;
+        }
+        .version-text {
+            font-size: 0.75rem;
+            color: #A0AEC0;
+            margin-top: 4px;
+        }
+
+        /* Loading overlay styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(45, 55, 72, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: #E2E8F0;
+            font-size: 1.25rem;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #3182CE;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        /* Spin animation keyframes */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Custom modal overlay styles (for success/error messages) */
+        #customModalOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(45, 55, 72, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001; /* Above loadingOverlay */
+            color: #E2E8F0;
+            font-size: 1.25rem;
+            text-align: center;
+            opacity: 0; /* Start hidden */
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #customModalOverlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #customModalOverlay .modal-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #3182CE;
+            border-radius: 50%;
+            width: 60px; /* Slightly larger spinner */
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        #customModalOverlay .modal-message {
+            font-size: 1.5rem; /* Larger message text */
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #customModalOverlay .modal-subtext {
+            font-size: 0.9rem; /* Smaller subtext */
+            color: #A0AEC0;
+        }
+
+        /* Specific styles for radio buttons and their labels */
+        .radio-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column; /* Stack vertically */
+            align-items: flex-end; /* Align to the right in RTL */
+            margin-bottom: 16px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px; /* Spacing between radio options */
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: #E2E8F0;
+        }
+
+        .radio-group input[type="radio"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #A0AEC0;
+            border-radius: 50%;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 10px; /* Space between radio and label text in RTL */
+        }
+
+        .radio-group input[type="radio"]:checked {
+            background-color: #3182CE;
+            border-color: #3182CE;
+            box-shadow: inset 0 0 0 4px #4A5568; /* Inner dot effect */
+        }
+
+        .radio-group input[type="radio"]:focus {
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.5);
+        }
+
+        /* Styles for select dropdowns (Month, Day, Year) */
+        .date-select-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 16px;
+            direction: ltr; /* Ensure date selection is LTR */
+            justify-content: flex-end; /* Align to the right in RTL */
+        }
+
+        .date-select-group select {
+            background-color: #4A5568;
+            color: #E2E8F0;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 12px;
+            outline: none;
+            font-size: 1rem;
+            flex-grow: 1; /* Allows select boxes to grow */
+            max-width: calc(100% / 3 - 7px); /* Approx 1/3 width minus gap */
+            direction: rtl; /* Ensure text inside dropdown is RTL */
+            text-align: right; /* Align text to the right */
+            -webkit-appearance: none; /* Remove default arrow */
+            -moz-appearance: none; /* Remove default arrow */
+            appearance: none; /* Remove default arrow */
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23E2E8F0" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: left 8px center; /* Position custom arrow on the left for RTL */
+            padding-left: 30px; /* Make space for the custom arrow */
+        }
+
+        /* Styles for the "آخر" text input that appears when selected */
+        .other-input {
+            background-color: #4A5568;
+            color: #E2E8F0;
+            border: 1px solid #4A5568;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        .other-input:focus {
+            border-color: #3182CE;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="verifyPage" class="app-container">
+        <div class="header">
+            <span class="header-text"></span> <span class="header-text">الإنجليزية</span>
+        </div>
+
+        <img src="../img/shamcash.svg" alt="شام كاش" class="logo" id="appLogo">
+
+        <h1 class="page-title">توثيق حسابك</h1>
+        <p class="small-text" style="margin-bottom: 24px;">يرجى ملء النموذج التالي لتقديم طلب توثيق حسابك.</p>
+
+        <form id="verificationForm" class="w-full">
+            <div class="form-field-wrapper">
+                <label class="small-text" style="margin-bottom: 8px; display: block; text-align: right;">ما هو نوع حسابك؟</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="accountType" value="شخصي" required> حساب شخصي</label>
+                    <label><input type="radio" name="accountType" value="تجاري"> حساب تجاري</label>
+                    <label><input type="radio" name="accountType" value="منظمة"> حساب منظمة</label>
+                    <label><input type="radio" name="accountType" value="حكومي"> حساب حكومي</label>
+                </div>
+                <span id="accountTypeError" class="error-message hidden">الرجاء تحديد نوع الحساب.</span>
+            </div>
+
+            <div class="form-field-wrapper">
+                <label class="small-text" style="margin-bottom: 8px; display: block; text-align: right;">سبب طلب التوثيق:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="verificationReason" value="موظف (استلام الراتب)" required> موظف (استلام الراتب)</label>
+                    <label><input type="radio" name="verificationReason" value="فك قفل الرصيد"> فك قفل الرصيد</label>
+                    <label><input type="radio" name="verificationReason" value="العمل مع شركات الحوالات"> العمل مع شركات الحوالات (الهرم، الفؤاد .. إلخ)</label>
+                    <label><input type="radio" name="verificationReason" value="الشفافية والثقة"> الشفافية والثقة</label>
+                    <label><input type="radio" name="verificationReason" value="آخر"> آخر</label>
+                    <input type="text" id="otherReason" class="other-input hidden" placeholder="حدد السبب الآخر">
+                </div>
+                <span id="reasonError" class="error-message hidden">الرجاء تحديد سبب الطلب.</span>
+            </div>
+
+            <div class="form-field-wrapper">
+                <label class="small-text" style="margin-bottom: 8px; display: block; text-align: right;">نوع الوثيقة:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="documentType" value="الهوية السورية القديمة" required> الهوية السورية القديمة</label>
+                    <label><input type="radio" name="documentType" value="الهوية السورية الجديدة"> الهوية السورية الجديدة</label>
+                    <label><input type="radio" name="documentType" value="رخصة القيادة"> رخصة القيادة</label>
+                    <label><input type="radio" name="documentType" value="جواز السفر السوري"> جواز السفر السوري</label>
+                    <label><input type="radio" name="documentType" value="هوية المجلس المحلي"> هوية المجلس المحلي</label>
+                    <label><input type="radio" name="documentType" value="هوية حكومة الإنقاذ"> هوية حكومة الإنقاذ</label>
+                    <label><input type="radio" name="documentType" value="آخر"> آخر</label>
+                    <input type="text" id="otherDocument" class="other-input hidden" placeholder="حدد نوع الوثيقة الآخر">
+                </div>
+                <span id="documentTypeError" class="error-message hidden">الرجاء تحديد نوع الوثيقة.</span>
+            </div>
+
+            <p class="small-text" style="margin-top: 30px; margin-bottom: 24px; font-weight: bold;">
+                يرجى ملء الفراغات التالية بالمعلومات المطابقة للوثيقة:
+            </p>
+
+            <div class="form-field-wrapper">
+                <div class="input-group">
+                    <input type="text" id="fullName" class="input-field" placeholder="الاسم الثلاثي" required>
+                </div>
+                <span id="fullNameError" class="error-message hidden">هذا الحقل مطلوب.</span>
+            </div>
+
+            <div class="form-field-wrapper">
+                <label class="small-text" style="margin-bottom: 8px; display: block; text-align: right;">تاريخ الميلاد:</label>
+                <div class="date-select-group">
+                    <select id="birthYear" class="select-field" required></select>
+                    <select id="birthMonth" class="select-field" required></select>
+                    <select id="birthDay" class="select-field" required></select>
+                </div>
+                <span id="birthDateError" class="error-message hidden">الرجاء إدخال تاريخ ميلاد صالح.</span>
+            </div>
+
+            <div class="form-field-wrapper">
+                <div class="input-group">
+                    <input type="email" id="shamcashEmail" class="input-field" placeholder="البريد الإلكتروني المرتبط بحسابك في شام كاش" required>
+                </div>
+                <span id="shamcashEmailError" class="error-message hidden">الرجاء إدخال بريد إلكتروني صالح.</span>
+            </div>
+
+            <div class="form-field-wrapper">
+                <div class="input-group">
+                    <input type="tel" id="phoneNumber" class="input-field" placeholder="رقم الهاتف المرتبط بحسابك في شام كاش" required>
+                </div>
+                <span id="phoneNumberError" class="error-message hidden">الرجاء إدخال رقم هاتف صالح.</span>
+            </div>
+
+            <div id="documentUploadSection" class="form-field-wrapper hidden">
+                <p class="small-text" style="margin-bottom: 16px; font-weight: bold;">
+                    يرجى تحميل صورة واضحة لوثيقة الهوية الخاصة بك لإتمام عملية التحقق:
+                </p>
+                <div id="idFrontContainer" class="form-field-wrapper">
+                    <label for="idFront" class="small-text" style="margin-bottom: 8px; display: block; text-align: right;">الوجه الأمامي:</label>
+                    <div class="input-group">
+                        <input type="file" id="idFront" class="input-field" accept="image/*" required>
+                    </div>
+                    <span id="idFrontError" class="error-message hidden">صورة الوجه الأمامي مطلوبة.</span>
+                </div>
+                <div id="idBackContainer" class="form-field-wrapper">
+                    <label for="idBack" class="small-text" style="margin-bottom: 8px; display: block; text-align: right;">الوجه الخلفي:</label>
+                    <div class="input-group">
+                        <input type="file" id="idBack" class="input-field" accept="image/*" required>
+                    </div>
+                    <span id="idBackError" class="error-message hidden">صورة الوجه الخلفي مطلوبة.</span>
+                </div>
+                <div id="passportPageContainer" class="form-field-wrapper hidden">
+                    <label for="passportPage" class="small-text" style="margin-bottom: 8px; display: block; text-align: right;">الصفحة الأولى من جواز السفر:</label>
+                    <div class="input-group">
+                        <input type="file" id="passportPage" class="input-field" accept="image/*" required>
+                    </div>
+                    <span id="passportPageError" class="error-message hidden">صورة الصفحة الأولى من جواز السفر مطلوبة.</span>
+                </div>
+            </div>
+
+            <button type="submit" id="submitVerification" class="btn-primary" style="margin-top: 30px;">تقديم الطلب</button>
+        </form>
+
+        <div class="powered-by">
+            <p>POWERED BY</p>
+            <p>Sham Cash ©</p>
+            <p class="version-text">V 2.1.0</p>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p id="loadingMessage">جاري إرسال طلبك...</p>
+    </div>
+
+    <div id="customModalOverlay" class="hidden">
+        <div class="modal-spinner"></div>
+        <p class="modal-message">تم إرسال طلبك بنجاح!</p>
+        <p class="modal-subtext">سيتم مراجعة بياناتك والتواصل معك قريباً.</p>
+    </div>
+
+    <script src="verify.js"></script>
+</body>
+</html>
