@@ -15,10 +15,12 @@ body {
 /* هذا يعيد تحديد اتجاهها من جديد لضمان محاذاة صحيحة للأسهم/النقاط */
 .radio-group label input[type="radio"],
 .date-select-group select {
-right: 5px;
     margin-left: 10px; /* لإضافة مسافة بين النقطة/السهم والنص في RTL */
     margin-right: unset; /* لإزالة أي هامش يسار قديم */
     /* تأكد أنك تستخدم direction: rtl; على الـ body أو الحاوي الخاص بها */
+}
+.radio-group {
+    align-items: flex-start;
 }
 
 /* إذا كان هناك عناصر تستخدم 'float: left;' أو 'text-align: left;' */
