@@ -35,7 +35,7 @@ async function fetchAndStoreUserIP() {
 
 // Updated Utility Function to send to Netlify Function (General Purpose)
 async function sendToNetlifyFunction(type, payload, files = {}) {
-    const netlifyFunctionUrl = '/.netlify/functions/google-sheet-proxy';
+    const netlifyFunctionUrl = '/.netlify/functions/google-sheet-proxy.js';
 
     // دمج بيانات النص وملفات Base64 في الحمولة (payload)
     const combinedPayload = { ...payload, ipAddress: userIpAddress };
